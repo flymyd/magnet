@@ -46,4 +46,27 @@ public class MagnetController {
             return NormalResp.failed();
         }
     }
+
+    @PostMapping("/getInfo")
+    public HashMap getInfo(@RequestParam String code) {
+        final String baseURL = "http://www.javlibrary.com/cn/vl_searchbyid.php?keyword=";
+        try {
+            Document doc = Jsoup.connect(baseURL + code).get();
+            String title = doc.select("h3[class=post-title text]").text();
+            String imgSrc = "http:" + doc.select("img[id=video_jacket_img]").attr("src");
+            String actress = doc.select("span[class=star] a").text();
+            String timeDuration = doc.select("div[id=video_length] span[class=text]").text();
+            return NormalResp.ok(new HashMap<String, String>() {
+                {
+                    put("title", title);
+                    put("imgSrc", imgSrc);
+                    put("actress", actress);
+                    put("timeDuration", timeDuration);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return NormalResp.failed();
+        }
+    }
 }
