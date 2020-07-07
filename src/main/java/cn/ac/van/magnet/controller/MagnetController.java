@@ -14,6 +14,7 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api")
 public class MagnetController {
+    public String UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36";
     @PostMapping("/getMagnet")
     public HashMap getMagnet(@RequestParam String code) {
         final String magnetHead = "magnet:?xt=urn:btih:";
@@ -53,7 +54,7 @@ public class MagnetController {
         ArrayList<HashMap<String, String>> parentList = new ArrayList<>();
         try {
             for (String code : codesBatchReq.getCodes()) {
-                Document doc = Jsoup.connect(baseURL + code).get();
+                Document doc = Jsoup.connect(baseURL + code).userAgent(UA).get();
                 Elements hrefList = doc.select("div[class=data-list] a[href]");
                 int resNum = codesBatchReq.getNums();
                 if (resNum>hrefList.size()) resNum = hrefList.size();
@@ -72,7 +73,7 @@ public class MagnetController {
                     tmp.put("src", magnetHead + originSrc.replace("https://btsow.space/magnet/detail/hash/", ""));
                     parentList.set(i, tmp);
                 }
-                Thread.sleep(1000);
+                Thread.sleep(2000);
             }
             return NormalResp.ok(parentList);
         } catch (Exception e) {
