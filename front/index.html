@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link href="./css/bootstrap.min.css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="app">
+			<div class="container-fluid">
+				<nav class="navbar navbar-default navbar-inverse" role="navigation">
+					<div class="container-fluid">
+						<div class="navbar-header">
+							<a class="navbar-brand" href="#">图钉冲冲俱乐部</a>
+						</div>
+						<div style="float: right;">
+							<form class="navbar-form navbar-left" role="search">
+								<div class="form-group">
+									<input type="text" class="form-control" placeholder="输入番号" v-model="searchOne">
+								</div>
+								<button type="submit" class="btn btn-default">搜索</button>
+							</form>
+						</div>
+					</div>
+				</nav>
+				<div class="main-body">
+					<form role="form">
+						<div class="form-group">
+							<p>
+								<label for="name">在此批量输入番号（最多5条）</label>
+								<textarea class="form-control" rows="7" v-model="searchBatch"></textarea></p>
+							<p>
+								<label for="name">每个番号显示的磁力链数量（按热度排序）</label>
+								<input type="text" class="form-control" placeholder="输入数字" v-model="searchBatchNum" />
+							</p>
+							<button type="button" class="btn btn-success" @click="searchByBatch">搜索</button>
+						</div>
+						<div v-show="searchBatchStatus">
+							<h2>搜索结果</h2>
+							<h3>当前搜索番号数：{{toSearchBanGNum}}条，预计需要{{toSearchBanGNum*1.2}}秒</h3>
+							<h3>搜索状态：{{searchBatchStatus}}</h3>
+							<div class="list-group" v-for="(item,i) in searchBatchResult">
+								<a class="list-group-item active">
+									<h4 class="list-group-item-heading">
+										{{item.title}}
+									</h4>
+								</a>
+								<div>
+									<a class="list-group-item">
+										<p class="list-group-item-text">
+											{{item.src}}
+										</p>
+									</a>
+								</div>
+							</div>
+							<hr />
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="js/vue.min.js"></script>
+	<script src="js/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script>
+		const banG_regexp = /[a-zA-Z]+-[0-9]+/g;
+		const servUrl = "http://127.0.0.1:9999/api"
+		let app = new Vue({
+			el: '#app',
+			data: {
+				searchOne: '',
+				toSearchBanGNum: 0,
+				searchBatch: '',
+				searchBatchNum: 1,
+				searchBatchResult: [],
+				searchBatchStatus: '搜索中',
+				searchBatchStatus: false,
+			},
+			methods: {
+				searchByBatch() {
+					this.searchBatchStatus = true;
+					let resultArr = this.searchBatch.match(banG_regexp);
+					resultArr = resultArr.slice(0, 5)
+					this.toSearchBanGNum = resultArr.length;
+					const toSearchNum = parseInt(this.searchBatchNum);
+					this.searchBatchStatus = '搜索中';
+					this.searchBatchResult = [];
+					$.ajax({
+						type: "POST",
+						url: servUrl + "/getMagnetBatch",
+						data: JSON.stringify({
+							"codes": resultArr,
+							"nums": toSearchNum
+						}),
+						headers: {
+							"Content-Type": "application/json",
+							"cache-control": "no-cache"
+						},
+						success: (result) => {
+							console.log(result);
+							this.searchBatchStatus = '搜索完毕';
+							this.searchBatchResult = result.data;
+						},
+						error: (message) => {
+							console.log(message);
+							this.searchBatchStatus = '搜索失败';
+						}
+					});
+				}
+			}
+		})
+	</script>
+</html>
